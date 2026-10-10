@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SWAT COMMAND CENTER & INTELLIGENCE SYSTEM</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #05070a;
+            --panel-bg: rgba(10, 15, 26, 0.95);
+            --border-cyan: #00f0ff;
+            --accent-green: #00ff66;
+            --accent-red: #ff0055;
+            --accent-amber: #ffaa00;
+            --text-bright: #ffffff;
+            --text-dim: #7a8b9e;
+            --glow-cyan: rgba(0, 240, 255, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Consolas', 'Courier New', monospace, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-bright);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                radial-gradient(circle at 50% 10%, rgba(0, 240, 255, 0.08), transparent 70%),
+                linear-gradient(0deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 20px 20px, 20px 20px;
+            overflow-x: hidden;
+        }
+
+        /* LOGIN MODAL */
+        #loginOverlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(2, 4, 8, 0.96);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-card {
+            background: var(--panel-bg);
+            border: 2px solid var(--border-cyan);
+            box-shadow: 0 0 35px var(--glow-cyan);
+            padding: 30px;
+            width: 380px;
+            text-align: center;
+        }
+
+        .login-card h2 {
+            font-size: 16px;
+            letter-spacing: 2px;
+            color: var(--border-cyan);
+            margin-bottom: 20px;
+        }
+
+        .login-input {
+            width: 100%;
+            background: #020408;
+            border: 1px solid var(--border-cyan);
+            color: #fff;
+            padding: 10px 14px;
+            margin-bottom: 15px;
+            font-family: inherit;
+            font-size: 13px;
+        }
+
+        .login-input:focus {
+            outline: none;
+            box-shadow: 0 0 10px var(--border-cyan);
+        }
+
+        .login-error {
+            color: var(--accent-red);
+            font-size: 11px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        /* HEADER */
+        header {
+            background: rgba(5, 8, 14, 0.95);
+            border-bottom: 2px solid var(--border-cyan);
+            padding: 12px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 0 15px var(--glow-cyan);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .brand-icon {
+            font-size: 30px;
+            color: var(--border-cyan);
+            text-shadow: 0 0 10px var(--border-cyan);
+        }
+
+        .brand-text h1 {
+            font-size: 17px;
+            letter-spacing: 3px;
+            color: #fff;
+        }
+
+        .user-status {
+            font-size: 11px;
+            color: var(--border-cyan);
+            border: 1px solid var(--border-cyan);
+            padding: 5px 12px;
+            background: rgba(0, 240, 255, 0.1);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background: rgba(0, 240, 255, 0.05);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            color: var(--text-dim);
+            padding: 9px 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 11px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background: rgba(0, 240, 255, 0.2);
+            color: var(--border-cyan);
+            border-color: var(--border-cyan);
+            box-shadow: 0 0 12px var(--glow-cyan);
+        }
+
+        /* CONTAINER */
+        .app-container {
+            padding: 20px;
+            flex: 1;
+            max-width: 1700px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* GRID PANELS */
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid rgba(0, 240, 255, 0.25);
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0, 240, 255, 0.15);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .panel-title {
+            font-size: 13px;
+            color: var(--border-cyan);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* STAT CARDS */
+        .stat-card {
+            background: var(--panel-bg);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            padding: 18px;
+        }
+
+        .stat-title {
+            font-size: 11px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 26px;
+            font-weight: bold;
+            color: #fff;
+            margin-top: 5px;
+        }
+
+        /* TABLES */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 240, 255, 0.08);
+            font-size: 12px;
+        }
+
+        th {
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        /* BUTTONS */
+        .btn {
+            background: rgba(0, 240, 255, 0.1);
+            border: 1px solid var(--border-cyan);
+            color: var(--border-cyan);
+            padding: 8px 14px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: var(--border-cyan);
+            color: #000;
+            box-shadow: 0 0 10px var(--border-cyan);
+        }
+
+        .btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .badge {
+            padding: 3px 8px;
+            font-size: 10px;
+            font-weight: bold;
+            border-radius: 2px;
+        }
+
+        .badge-green { background: rgba(0, 255, 102, 0.15); color: var(--accent-green); border: 1px solid var(--accent-green); }
+        .badge-amber { background: rgba(255, 170, 0, 0.15); color: var(--accent-amber); border: 1px solid var(--accent-amber); }
+        .badge-red { background: rgba(255, 0, 85, 0.15); color: var(--accent-red); border: 1px solid var(--accent-red); }
+
+        .notification-box {
+            background: #03060a;
+            border: 1px solid var(--accent-amber);
+            padding: 12px;
+            margin-bottom: 12px;
+            font-size: 12px;
+            border-left: 4px solid var(--accent-amber);
+        }
+
+        .suspect-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .suspect-card {
+            background: #020408;
+            border: 1px solid var(--accent-red);
+            padding: 15px;
+            text-align: center;
+            position: relative;
+        }
+
+        .suspect-card img {
+            width: 90px;
+            height: 90px;
+            object-fit: cover;
+            border: 1px solid var(--accent-red);
+            margin-bottom: 10px;
+        }
+
+        .suspect-name {
+            font-size: 13px;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .suspect-role {
+            font-size: 10px;
+            color: var(--accent-amber);
+            margin-top: 3px;
+        }
+
+        #policeChiefInjectorPanel {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- LOGIN MODAL -->
+    <div id="loginOverlay">
+        <div class="login-card">
+            <i class="fa-solid fa-shield-halved" style="font-size: 40px; color: var(--border-cyan); margin-bottom: 15px;"></i>
+            <h2>SWAT SYSTEM AUTHENTICATION</h2>
+            
+            <input type="text" id="loginName" class="login-input" placeholder="Enter Operative Name...">
+            <input type="password" id="loginPass" class="login-input" placeholder="Role Password (Optional)...">
+            
+            <div id="loginError" class="login-error">ACCESS DENIED!</div>
+            
+            <button class="btn" style="width: 100%; padding: 10px;" onclick="attemptLogin()">AUTHENTICATE</button>
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <header>
+        <div class="brand">
+            <i class="fa-solid fa-shield-cat brand-icon"></i>
+            <div class="brand-text">
+                <h1>SWAT COMMAND CENTER</h1>
+            </div>
+        </div>
+
+        <div class="user-status" id="userStatusBox">
+            OPERATIVE: UNKNOWN | ROLE: RESTRICTED
+        </div>
+
+        <nav class="nav-links">
+            <button class="nav-btn active" onclick="switchTab(event, 'overview')"><i class="fa-solid fa-gauge-high"></i> Dashboard</button>
+            <button class="nav-btn" onclick="switchTab(event, 'missions')"><i class="fa-solid fa-list-check"></i> Missions</button>
+            <button class="nav-btn" onclick="switchTab(event, 'rewards')"><i class="fa-solid fa-gift"></i> Rewards & HQ</button>
+            <button class="nav-btn" onclick="switchTab(event, 'network')"><i class="fa-solid fa-diagram-project"></i> Network</button>
+            <button class="nav-btn" onclick="switchTab(event, 'reports')"><i class="fa-solid fa-file-contract"></i> Reports</button>
+            <button class="nav-btn" onclick="switchTab(event, 'agents')"><i class="fa-solid fa-users-viewfinder"></i> Operatives</button>
+        </nav>
+    </header>
+
+    <!-- MAIN APP CONTAINER -->
+    <div class="app-container">
+
+        <!-- TAB 1: OVERVIEW -->
+        <div id="overview" class="tab-content active">
+            <div class="grid-4">
+                <div class="stat-card">
+                    <div class="stat-title">Department Budget</div>
+                    <div class="stat-value" id="budgetValue">$400,000</div>
+                    <div style="font-size: 10px; color: var(--accent-green); margin-top: 5px;">Managed by Police Chief</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-title">Approved Operatives</div>
+                    <div class="stat-value" id="agentCountText">0</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-title">Active Missions</div>
+                    <div class="stat-value" id="activeMissionsCount">0</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-title">Pending Reports</div>
+                    <div class="stat-value" id="pendingReportsCount" style="color: var(--accent-amber);">0</div>
+                </div>
+            </div>
+
+            <!-- POLICE CHIEF NOTIFICATIONS PANEL -->
+            <div class="panel" id="notificationsPanel" style="display:none;">
+                <div class="panel-header">
+                    <span class="panel-title"><i class="fa-solid fa-bell"></i> Police Chief Command Notifications</span>
+                </div>
+                <div id="notificationsContainer">
+                    <p style="color:var(--text-dim); font-size:12px;">No new notifications.</p>
+                </div>
+            </div>
+
+            <!-- POLICE CHIEF FINANCIAL & RESET PANEL -->
+            <div class="panel" id="policeChiefInjectorPanel">
+                <div class="panel-header">
+                    <span class="panel-title"><i class="fa-solid fa-vault"></i> Police Chief Financial & System Controls</span>
+                    <button class="btn badge-red chief-action" onclick="resetSystemData()"><i class="fa-solid fa-rotate-left"></i> Master System Reset</button>
+                </div>
+                <p style="font-size: 11px; color: var(--text-dim); margin-bottom: 15px;">Only visible to Police Chief (code: <code>policechief1</code>).</p>
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <input type="number" id="injectAmount" class="login-input" placeholder="Amount ($)" style="margin:0; flex:1;">
+                    <button class="btn chief-action" onclick="injectFunds()"><i class="fa-solid fa-plus"></i> Add Funds</button>
+                    <button class="btn badge-red chief-action" onclick="deductFunds()"><i class="fa-solid fa-minus"></i> Deduct Funds</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title"><i class="fa-solid fa-shield"></i> Current System Access</span>
+                </div>
+                <div id="accessDetails" style="font-size: 12px; color: var(--text-dim); line-height: 1.8;">
+                    Log in to view granted privileges.
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: MISSIONS -->
+        <div id="missions" class="tab-content">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title"><i class="fa-solid fa-list-check"></i> Missions & Payouts</span>
+                    <button class="btn chief-action" onclick="createMissionModal()"><i class="fa-solid fa-plus"></i> Dispatch Mission (Chief)</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mission Name</th>
+                            <th>Target / Description</th>
+                            <th>Reward Payout</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="missionTable">
+                        <!-- Populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB 3: REWARDS & HQ ACQUISITIONS -->
+        <div id="rewards" class="tab-content">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title"><i class="fa-solid fa-gift"></i> Rewards & Headquarter Acquisitions</span>
+                    <button class="btn chief-action" onclick="addRewardItem()"><i class="fa-solid fa-plus"></i> Add Acquisition (Chief)</button>
+                </div>
+                <div class="suspect-grid" id="rewardsContainer">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: CRIME NETWORK -->
+        <div id="network" class="tab-content">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title"><i class="fa-solid fa-diagram-project"></i> Crime Network & Gang Mapping</span>
+                    <button class="btn" onclick="addSuspect()"><i class="fa-solid fa-user-plus"></i> Add Suspect Node</button>
+                </div>
+                
+                <div id="suspectContainer" class="suspect-grid">
+                    <!-- Dynamic Suspect Cards -->
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 5: REPORTS -->
+        <div id="reports" class="tab-content">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title"><i class="fa-solid fa-file-contract"></i> Submitted SWAT Field Reports</span>
+                    <button class="btn commander-action" onclick="submitReportModal()"><i class="fa-solid fa-paper-plane"></i> Submit Report</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Report Title</th>
+                            <th>Submitted By</th>
+                            <th>Content Summary</th>
+                            <th>Chief Approval</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportTable">
+                        <!-- Populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB 6: AGENTS -->
+        <div id="agents" class="tab-content">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title"><i class="fa-solid fa-users-viewfinder"></i> SWAT Approved Roster</span>
+                    <button class="btn commander-action" onclick="addAgent()"><i class="fa-solid fa-user-plus"></i> Register Operative</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Agent Name</th>
+                            <th>Military Rank</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="agentTable">
+                        <!-- Populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let budget = 400000;
+        let role = "GUEST"; // CHIEF, COMMANDER, AGENT
+        let currentUser = "";
+
+        let approvedAgents = [];
+        let missions = [];
+        let reports = [];
+        let suspects = [];
+        let notifications = [];
+        let defaultRewards = [
+            { id: 1, title: "Main SWAT Headquarter (HQ)", cost: 1000000, desc: "Secure primary tactical underground base with full garage.", purchased: false },
+            { id: 2, title: "Advanced Recon Drone Hub", cost: 350000, desc: "Aerial surveillance support grid for active sectors.", purchased: false }
+        ];
+        let rewards = [...defaultRewards];
+
+        const swatRanksList = [
+            "Cadet",
+            "Officer I",
+            "Officer II",
+            "Officer III",
+            "Sergeant I",
+            "Sergeant II",
+            "Sergeant III",
+            "First Lieutenant",
+            "Captain",
+            "Major",
+            "Colonel"
+        ];
+
+        function loadData() {
+            const saved = localStorage.getItem('swat_system_data');
+            if (saved) {
+                const data = JSON.parse(saved);
+                budget = data.budget ?? 400000;
+                approvedAgents = data.approvedAgents || [];
+                missions = data.missions || [];
+                reports = data.reports || [];
+                suspects = data.suspects || [];
+                notifications = data.notifications || [];
+                rewards = data.rewards || [...defaultRewards];
+            }
+        }
+
+        function saveData() {
+            const data = { budget, approvedAgents, missions, reports, suspects, notifications, rewards };
+            localStorage.setItem('swat_system_data', JSON.stringify(data));
+            updateUI();
+        }
+
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'swat_system_data') {
+                loadData();
+                updateUI();
+            }
+        });
+
+        loadData();
+
+        function attemptLogin() {
+            const nameInput = document.getElementById('loginName').value.trim();
+            const passInput = document.getElementById('loginPass').value.trim();
+            const errorBox = document.getElementById('loginError');
+
+            if (!nameInput) {
+                errorBox.innerText = "ERROR: Name is required!";
+                errorBox.style.display = "block";
+                return;
+            }
+
+            // 1. POLICE CHIEF AUTHENTICATION
+            if (passInput === "policechief1") {
+                role = "CHIEF";
+                currentUser = nameInput + " (Police Chief)";
+                grantAccess();
+                return;
+            }
+
+            // 2. SWAT COMMANDER AUTHENTICATION
+            if (passInput === "swatcommander") {
+                role = "COMMANDER";
+                currentUser = nameInput + " (SWAT Commander)";
+                if (!approvedAgents.some(a => a.name.toLowerCase() === nameInput.toLowerCase())) {
+                    approvedAgents.push({ name: nameInput, rank: "Colonel" });
+                    saveData();
+                }
+                grantAccess();
+                return;
+            }
+
+            // 3. REGULAR AGENT VERIFICATION
+            const matchedAgent = approvedAgents.find(a => a.name.toLowerCase() === nameInput.toLowerCase());
+            if (matchedAgent) {
+                role = "AGENT";
+                currentUser = matchedAgent.name;
+                grantAccess();
+            } else {
+                errorBox.innerText = "ACCESS DENIED: Name not approved by Commander or Chief!";
+                errorBox.style.display = "block";
+            }
+        }
+
+        function grantAccess() {
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('userStatusBox').innerText = `USER: ${currentUser.toUpperCase()} | ROLE: ${role}`;
+            
+            if (role === "CHIEF") {
+                document.getElementById('policeChiefInjectorPanel').style.display = 'block';
+                document.getElementById('notificationsPanel').style.display = 'block';
+            } else {
+                document.getElementById('policeChiefInjectorPanel').style.display = 'none';
+                document.getElementById('notificationsPanel').style.display = 'none';
+            }
+
+            applyPermissions();
+            updateUI();
+        }
+
+        function applyPermissions() {
+            document.querySelectorAll('.chief-action').forEach(btn => {
+                btn.disabled = (role !== "CHIEF");
+            });
+
+            document.querySelectorAll('.commander-action').forEach(btn => {
+                btn.disabled = (role !== "COMMANDER" && role !== "CHIEF");
+            });
+
+            document.getElementById('accessDetails').innerHTML = `
+                <p>Logged in as: <b>${currentUser}</b></p>
+                <p>Role Level: <b>${role}</b></p>
+                <p>Fund Injection Permission: <b>${role === 'CHIEF' ? 'ENABLED' : 'DISABLED'}</b></p>
+                <p>Mission Dispatching: <b>${role === 'CHIEF' ? 'ENABLED' : 'DISABLED'}</b></p>
+                <p>Roster & Rank Management: <b>${(role === 'COMMANDER' || role === 'CHIEF') ? 'ENABLED' : 'DISABLED'}</b></p>
+            `;
+        }
+
+        function switchTab(evt, tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+
+            document.getElementById(tabId).classList.add('active');
+
+            if (evt) {
+                evt.currentTarget.classList.add('active');
+            } else {
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    if (btn.getAttribute('onclick').includes(tabId)) {
+                        btn.classList.add('active');
+                    }
+                });
+            }
+        }
+
+        // FINANCIAL CONTROLS & RESET
+        function injectFunds() {
+            if (role !== "CHIEF") return;
+            const amount = parseFloat(document.getElementById('injectAmount').value);
+            if (amount > 0) {
+                budget += amount;
+                document.getElementById('injectAmount').value = '';
+                saveData();
+                alert(`Successfully injected $${amount.toLocaleString()} into budget.`);
+            }
+        }
+
+        function deductFunds() {
+            if (role !== "CHIEF") return;
+            const amount = parseFloat(document.getElementById('injectAmount').value);
+            if (amount > 0) {
+                if (budget >= amount) {
+                    budget -= amount;
+                    document.getElementById('injectAmount').value = '';
+                    saveData();
+                    alert(`Successfully deducted $${amount.toLocaleString()} from budget.`);
+                } else {
+                    alert("Deduction amount exceeds total budget!");
+                }
+            }
+        }
+
+        function resetSystemData() {
+            if (role !== "CHIEF") return;
+            if (confirm("Master Reset: Are you sure you want to reset Budget to $400,000 and clear all Missions/Reports?")) {
+                budget = 400000;
+                missions = [];
+                reports = [];
+                notifications = [];
+                rewards = [...defaultRewards];
+                saveData();
+                alert("System successfully reset to default status.");
+            }
+        }
+
+        // MISSIONS SYSTEM
+        function createMissionModal() {
+            if (role !== "CHIEF") return;
+            const title = prompt("Enter Mission Title:");
+            const desc = prompt("Enter Target Details:");
+            const reward = parseFloat(prompt("Enter Reward Payout ($):"));
+
+            if (title && reward) {
+                missions.push({
+                    id: Date.now(),
+                    title: title,
+                    desc: desc || "N/A",
+                    reward: reward,
+                    status: "ACTIVE"
+                });
+                saveData();
+            }
+        }
+
+        function markMissionCompleted(id) {
+            if (role !== "COMMANDER" && role !== "CHIEF") return;
+            const m = missions.find(x => x.id === id);
+            if (m && m.status === "ACTIVE") {
+                m.status = "PENDING_APPROVAL";
+                saveData();
+            }
+        }
+
+        function reviewMission(id, approved) {
+            if (role !== "CHIEF") return;
+            const m = missions.find(x => x.id === id);
+            if (m && m.status === "PENDING_APPROVAL") {
+                if (approved) {
+                    m.status = "APPROVED_PAID";
+                    budget += m.reward;
+                } else {
+                    m.status = "DECLINED";
+                }
+                saveData();
+            }
+        }
+
+        function renderMissions() {
+            const tbody = document.getElementById('missionTable');
+            tbody.innerHTML = '';
+            missions.forEach(m => {
+                let badgeClass = "badge-amber";
+                let statusText = m.status;
+                if (m.status === "ACTIVE") statusText = "ACTIVE";
+                else if (m.status === "PENDING_APPROVAL") { statusText = "WAITING CHIEF APPROVAL"; badgeClass = "badge-amber"; }
+                else if (m.status === "APPROVED_PAID") { statusText = "APPROVED & PAID ✔"; badgeClass = "badge-green"; }
+                else if (m.status === "DECLINED") { statusText = "DECLINED ✖"; badgeClass = "badge-red"; }
+
+                let actionBtn = "";
+                if (m.status === "ACTIVE") {
+                    actionBtn = `<button class="btn commander-action" onclick="markMissionCompleted(${m.id})">Mark Completed</button>`;
+                } else if (m.status === "PENDING_APPROVAL") {
+                    if (role === "CHIEF") {
+                        actionBtn = `
+                            <button class="btn badge-green" onclick="reviewMission(${m.id}, true)">Done</button>
+                            <button class="btn badge-red" onclick="reviewMission(${m.id}, false)">Decline</button>
+                        `;
+                    } else {
+                        actionBtn = `<span style="color:var(--accent-amber); font-size:11px;">Awaiting Chief Review</span>`;
+                    }
+                } else {
+                    actionBtn = `<span style="color:var(--text-dim);">Closed</span>`;
+                }
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><b>${m.title}</b></td>
+                    <td>${m.desc}</td>
+                    <td style="color:var(--accent-green)">+$${m.reward.toLocaleString()}</td>
+                    <td><span class="badge ${badgeClass}">${statusText}</span></td>
+                    <td>${actionBtn}</td>
+                `;
+                tbody.appendChild(row);
+            });
+            applyPermissions();
+        }
+
+        // REWARDS & HQ PURCHASING WITH NOTIFICATION
+        function addRewardItem() {
+            if (role !== "CHIEF") return;
+            const title = prompt("Enter Acquisition / Reward Item Name:");
+            const cost = parseFloat(prompt("Enter Cost ($):"));
+            const desc = prompt("Enter Description:");
+
+            if (title && cost) {
+                rewards.push({
+                    id: Date.now(),
+                    title: title,
+                    cost: cost,
+                    desc: desc || "Military Asset",
+                    purchased: false
+                });
+                saveData();
+            }
+        }
+
+        function purchaseReward(id) {
+            if (role !== "COMMANDER" && role !== "CHIEF") return;
+            const item = rewards.find(x => x.id === id);
+            if (item && !item.purchased) {
+                if (budget >= item.cost) {
+                    budget -= item.cost;
+                    item.purchased = true;
+
+                    notifications.unshift({
+                        id: Date.now(),
+                        text: `SWAT Commander [${currentUser}] successfully purchased acquisition: [${item.title}] for $${item.cost.toLocaleString()}.`,
+                        time: new Date().toLocaleTimeString()
+                    });
+
+                    saveData();
+                    alert(`Successfully acquired ${item.title}! Notification sent to Police Chief.`);
+                } else {
+                    alert("INSUFFICIENT DEPARTMENT BUDGET!");
+                }
+            }
+        }
+
+        function renderRewards() {
+            const container = document.getElementById('rewardsContainer');
+            container.innerHTML = '';
+            rewards.forEach(r => {
+                const card = document.createElement('div');
+                card.className = 'suspect-card';
+                card.style.borderColor = r.purchased ? 'var(--accent-green)' : 'var(--border-cyan)';
+                card.innerHTML = `
+                    <div style="font-size:24px; color:${r.purchased ? 'var(--accent-green)' : 'var(--border-cyan)'}; margin-bottom:10px;">
+                        <i class="fa-solid ${r.purchased ? 'fa-circle-check' : 'fa-building-shield'}"></i>
+                    </div>
+                    <div class="suspect-name">${r.title}</div>
+                    <p style="font-size:11px; color:var(--text-dim); margin:8px 0;">${r.desc}</p>
+                    <div class="suspect-role" style="font-size:13px; color:var(--accent-green); margin-bottom:10px;">Cost: $${r.cost.toLocaleString()}</div>
+                    ${r.purchased 
+                        ? `<span class="badge badge-green">ACQUIRED ✔</span>`
+                        : `<button class="btn commander-action" style="width:100%;" onclick="purchaseReward(${r.id})">Purchase (Commander)</button>`
+                    }
+                `;
+                container.appendChild(card);
+            });
+            applyPermissions();
+        }
+
+        function renderNotifications() {
+            const container = document.getElementById('notificationsContainer');
+            if (notifications.length === 0) {
+                container.innerHTML = `<p style="color:var(--text-dim); font-size:12px;">No new notifications.</p>`;
+                return;
+            }
+            container.innerHTML = '';
+            notifications.forEach(n => {
+                const box = document.createElement('div');
+                box.className = 'notification-box';
+                box.innerHTML = `<b>[${n.time}]</b> ${n.text}`;
+                container.appendChild(box);
+            });
+        }
+
+        // CRIME NETWORK
+        function addSuspect() {
+            const name = prompt("Enter Suspect Name:");
+            const roleName = prompt("Enter Gang Role / Alias:");
+            const photo = prompt("Enter Photo URL (or leave blank for default):");
+
+            if (name) {
+                suspects.push({
+                    name: name,
+                    role: roleName || "Suspect",
+                    photo: photo || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150"
+                });
+                saveData();
+            }
+        }
+
+        function renderSuspects() {
+            const container = document.getElementById('suspectContainer');
+            container.innerHTML = '';
+            suspects.forEach(s => {
+                const card = document.createElement('div');
+                card.className = 'suspect-card';
+                card.innerHTML = `
+                    <img src="${s.photo}" alt="Suspect">
+                    <div class="suspect-name">${s.name}</div>
+                    <div class="suspect-role">${s.role}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // REPORTS SYSTEM
+        function submitReportModal() {
+            const title = prompt("Report Title:");
+            const content = prompt("Report Content / Details:");
+
+            if (title && content) {
+                reports.push({
+                    id: Date.now(),
+                    title: title,
+                    by: currentUser,
+                    content: content,
+                    status: "PENDING"
+                });
+                saveData();
+            }
+        }
+
+        function reviewReport(id, approved) {
+            if (role !== "CHIEF") return;
+            const r = reports.find(x => x.id === id);
+            if (r) {
+                r.status = approved ? "APPROVED" : "REJECTED";
+                if (approved) {
+                    const bonus = prompt("Enter Bonus Payout Amount for this Report ($) [Leave 0 for none]:", "0");
+                    const bonusAmount = parseFloat(bonus);
+                    if (bonusAmount > 0) {
+                        budget += bonusAmount;
+                        alert(`Report Approved! Bonus of $${bonusAmount.toLocaleString()} added to budget.`);
+                    }
+                }
+                saveData();
+            }
+        }
+
+        function renderReports() {
+            const tbody = document.getElementById('reportTable');
+            tbody.innerHTML = '';
+            reports.forEach(r => {
+                let actionBtns = `<span style="color:var(--text-dim);">No Permission</span>`;
+                if (role === "CHIEF") {
+                    actionBtns = `
+                        <button class="btn badge-green" onclick="reviewReport(${r.id}, true)">Approve</button>
+                        <button class="btn badge-red" onclick="reviewReport(${r.id}, false)">Reject</button>
+                    `;
+                }
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><b>${r.title}</b></td>
+                    <td>${r.by}</td>
+                    <td>${r.content}</td>
+                    <td><span class="badge ${r.status === 'APPROVED' ? 'badge-green' : (r.status === 'REJECTED' ? 'badge-red' : 'badge-amber')}">${r.status}</span></td>
+                    <td>${actionBtns}</td>
+                `;
+                tbody.appendChild(row);
+            });
+            applyPermissions();
+        }
+
+        // AGENTS ROSTER, PROMOTION & DISMISS
+        function addAgent() {
+            if (role !== "COMMANDER" && role !== "CHIEF") return;
+            const name = prompt("Enter Operative Name to Register:");
+            if (name) {
+                if (!approvedAgents.some(a => a.name.toLowerCase() === name.toLowerCase())) {
+                    let rankPrompt = prompt(`Choose Rank for ${name}:\n1. Cadet\n2. Officer I\n3. Officer II\n4. Officer III\n5. Sergeant I\n6. Sergeant II\n7. Sergeant III\n8. First Lieutenant\n9. Captain\n10. Major\n11. Colonel\n(Enter number 1-11):`, "1");
+                    let rankIndex = parseInt(rankPrompt) - 1;
+                    let selectedRank = swatRanksList[rankIndex] || "Cadet";
+
+                    approvedAgents.push({
+                        name: name,
+                        rank: selectedRank
+                    });
+                    saveData();
+                } else {
+                    alert("Agent already exists in roster!");
+                }
+            }
+        }
+
+        function updateAgentRank(name) {
+            if (role !== "COMMANDER" && role !== "CHIEF") return;
+            const agent = approvedAgents.find(a => a.name === name);
+            if (agent) {
+                let rankPrompt = prompt(`Update Rank for ${name} (Current: ${agent.rank}):\n1. Cadet\n2. Officer I\n3. Officer II\n4. Officer III\n5. Sergeant I\n6. Sergeant II\n7. Sergeant III\n8. First Lieutenant\n9. Captain\n10. Major\n11. Colonel\n(Enter number 1-11):`, "1");
+                let rankIndex = parseInt(rankPrompt) - 1;
+                let selectedRank = swatRanksList[rankIndex];
+                if (selectedRank) {
+                    agent.rank = selectedRank;
+                    saveData();
+                }
+            }
+        }
+
+        function dismissAgent(name) {
+            if (role !== "COMMANDER" && role !== "CHIEF") return;
+            if (confirm(`Are you sure you want to dismiss operative ${name}?`)) {
+                approvedAgents = approvedAgents.filter(a => a.name !== name);
+                saveData();
+            }
+        }
+
+        function renderAgents() {
+            const tbody = document.getElementById('agentTable');
+            tbody.innerHTML = '';
+            approvedAgents.forEach(a => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><b>${a.name}</b></td>
+                    <td style="color:var(--accent-green);">${a.rank}</td>
+                    <td>
+                        <button class="btn commander-action" onclick="updateAgentRank('${a.name}')">Edit Rank</button>
+                        <button class="btn badge-red commander-action" onclick="dismissAgent('${a.name}')">Dismiss</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            applyPermissions();
+        }
+
+        function updateUI() {
+            document.getElementById('budgetValue').innerText = '$' + budget.toLocaleString();
+            document.getElementById('agentCountText').innerText = approvedAgents.length;
+            document.getElementById('activeMissionsCount').innerText = missions.filter(m => m.status === 'ACTIVE' || m.status === 'PENDING_APPROVAL').length;
+            document.getElementById('pendingReportsCount').innerText = reports.filter(r => r.status === 'PENDING').length;
+            
+            renderAgents();
+            renderMissions();
+            renderReports();
+            renderSuspects();
+            renderRewards();
+            renderNotifications();
+        }
+    </script>
+</body>
+</html>
